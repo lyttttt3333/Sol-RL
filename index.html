@@ -338,24 +338,29 @@ section { padding-top: 60px; }
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.85rem;
+  font-size: 1.0rem;
 }
 
 thead th {
   background: #f5f7f0;
   color: var(--text-primary);
   font-weight: 600;
-  padding: 12px 16px;
-  text-align: left;
+  padding: 14px 18px;
+  text-align: center;
   white-space: nowrap;
   border-bottom: 2px solid #e0e0e0;
 }
 
+thead th:first-child { text-align: left; }
+
 tbody td {
-  padding: 10px 16px;
+  padding: 12px 18px;
   border-bottom: 1px solid #f0f0f0;
   color: var(--text-secondary);
+  text-align: center;
 }
+
+tbody td:first-child { text-align: left; }
 
 tbody tr:nth-child(even) { background: #fafafa; }
 tbody tr:hover { background: rgba(118, 185, 0, 0.05); }
@@ -631,53 +636,59 @@ footer a { color: var(--green-dim); text-decoration: none; }
     <section id="results">
       <h2 class="section-title">Overall Performance</h2>
 
-      <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 12px; font-weight: 600;">Main Results on FLUX.1</h3>
+      <h3 style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 12px; font-weight: 600;">Main Results on FLUX.1</h3>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Method</th>
-              <th>ImageReward</th>
-              <th>CLIPScore</th>
-              <th>PickScore</th>
-              <th>HPSv2</th>
+              <th rowspan="2" style="vertical-align: bottom;">Method</th>
+              <th colspan="2">ImageReward<br><span style="font-weight: 400; font-size: 0.8rem; color: var(--text-muted);">(Base w/o CFG: 0.455)</span></th>
+              <th colspan="2">CLIPScore<br><span style="font-weight: 400; font-size: 0.8rem; color: var(--text-muted);">(Base w/o CFG: 0.2630)</span></th>
+              <th colspan="2">PickScore<br><span style="font-weight: 400; font-size: 0.8rem; color: var(--text-muted);">(Base w/o CFG: 0.8096)</span></th>
+              <th colspan="2">HPSv2<br><span style="font-weight: 400; font-size: 0.8rem; color: var(--text-muted);">(Base w/o CFG: 0.2566)</span></th>
+            </tr>
+            <tr>
+              <th>Score</th><th>Δ (↑)</th>
+              <th>Score</th><th>Δ (↑)</th>
+              <th>Score</th><th>Δ (↑)</th>
+              <th>Score</th><th>Δ (↑)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>DanceGRPO</td>
-              <td>1.2351</td>
-              <td>0.2769</td>
-              <td>0.8807</td>
-              <td>0.3349</td>
+              <td>1.4937</td><td>+1.0387</td>
+              <td>0.2898</td><td>+0.0268</td>
+              <td>0.8807</td><td>+0.0711</td>
+              <td>0.3552</td><td>+0.0986</td>
             </tr>
             <tr>
               <td>FlowGRPO</td>
-              <td>1.5331</td>
-              <td>0.2884</td>
-              <td>0.8743</td>
-              <td>0.3501</td>
+              <td>1.5331</td><td>+1.0783</td>
+              <td>0.2884</td><td>+0.0254</td>
+              <td>0.8743</td><td>+0.0647</td>
+              <td>0.3501</td><td>+0.0935</td>
             </tr>
             <tr>
               <td>AWM</td>
-              <td>1.6757</td>
-              <td>0.3039</td>
-              <td>0.8842</td>
-              <td>0.3664</td>
+              <td>1.6693</td><td>+1.2143</td>
+              <td>0.3039</td><td>+0.0409</td>
+              <td>0.8842</td><td>+0.0746</td>
+              <td>0.3664</td><td>+0.1098</td>
             </tr>
             <tr>
               <td>DiffusionNFT</td>
-              <td>1.6707</td>
-              <td>0.2991</td>
-              <td>0.8852</td>
-              <td>0.3613</td>
+              <td>1.6707</td><td>+1.2157</td>
+              <td>0.2991</td><td>+0.0361</td>
+              <td>0.8852</td><td>+0.0756</td>
+              <td>0.3613</td><td>+0.1047</td>
             </tr>
             <tr style="background: rgba(118, 185, 0, 0.08);">
               <td><strong style="color: var(--green);">Sol-RL (Ours)</strong></td>
-              <td class="best">1.7636</td>
-              <td class="best">0.3089</td>
-              <td class="best">0.8932</td>
-              <td class="best">0.3688</td>
+              <td class="best"><strong>1.7636</strong></td><td class="best"><strong>+1.3086</strong></td>
+              <td class="best"><strong>0.3089</strong></td><td class="best"><strong>+0.0459</strong></td>
+              <td class="best"><strong>0.8932</strong></td><td class="best"><strong>+0.0836</strong></td>
+              <td class="best"><strong>0.3688</strong></td><td class="best"><strong>+0.1122</strong></td>
             </tr>
           </tbody>
         </table>
@@ -686,7 +697,7 @@ footer a { color: var(--green-dim); text-decoration: none; }
       <img src="static/images/grid_3x3.png" alt="Learning curves" class="section-img">
       <p class="caption">Learning curves across metrics and models.</p>
 
-      <h3 style="color: var(--text-primary); font-size: 1rem; margin: 32px 0 12px; font-weight: 600;">Efficiency Comparison (seconds/iteration)</h3>
+      <h3 style="color: var(--text-primary); font-size: 1.1rem; margin: 32px 0 12px; font-weight: 600;">Efficiency Comparison (seconds/iteration)</h3>
       <div class="table-wrap">
         <table>
           <thead>
