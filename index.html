@@ -545,7 +545,7 @@ footer a { color: var(--green-dim); text-decoration: none; }
       <h2 class="section-title">About</h2>
       <div class="card">
         <p style="color: var(--text-secondary); font-size: 0.95rem;">
-          Reinforcement-Learning-based post-training has recently emerged as a promising paradigm for aligning text-to-image diffusion models with human preferences. While increasing the rollout group size yields significant performance improvements, scaling rollout on large-scale foundational diffusion models (e.g., FLUX.1) imposes a prohibitive computational burden. Furthermore, naively accelerating the pipeline via quantized rollout introduces risks of performance degradation. To break this dilemma, we propose <strong style="color: var(--green);">Sol-RL</strong>, a novel FP4-empowered Two-Stage RL framework. By decoupling rollout for exploration and policy optimization, our method accelerates the rollout phase via FP4 quantization while reserving high-precision samples for optimization. Our framework is both efficient and near-lossless, maintaining the training fidelity of the full-precision rollout pipeline while fully exploiting the throughput gains enabled by NVFP4. Extensive experiments across SANA, FLUX.1 and SD3.5-L substantiate that our two-stage approach delivers superior alignment performance while accelerating end-to-end training by up to <strong style="color: var(--green);">4.64×</strong>.
+          Reinforcement-Learning-based post-training has recently emerged as a promising paradigm for aligning text-to-image diffusion models with human preferences. In recent studies, increasing the rollout group size yields pronounced performance improvements, indicating substantial room for further alignment gains. However, scaling rollouts on large-scale foundational diffusion models (e.g., FLUX.1-12B) imposes a heavy computational burden. To alleviate this bottleneck, we explore the integration of FP4 quantization into Diffusion RL rollouts. Yet, we identify that naive quantized pipelines inherently introduce risks of performance degradation. To overcome this dilemma between efficiency and training integrity, we propose <strong style="color: var(--green);">Sol-RL</strong> (Speed-of-light RL), a novel FP4-empowered Two-Stage Reinforcement Learning framework. First, we utilize high-throughput NVFP4 rollouts to generate a massive candidate pool and extract a highly contrastive subset. Second, we regenerate these selected samples in BF16 precision and optimize the policy exclusively on them. By decoupling candidate exploration from policy optimization, Sol-RL integrates the algorithmic mechanisms of rollout scaling with the system-level throughput gains of NVFP4. This synergistic algorithm-hardware design effectively accelerates the rollout phase while reserving high-fidelity samples for optimization. We empirically demonstrate that our framework maintains the training integrity of the BF16 precision pipeline while fully exploiting the throughput gains enabled by FP4 arithmetic. Extensive experiments across SANA, FLUX.1, and SD3.5-L substantiate that our approach delivers superior alignment performance across multiple metrics while accelerating training convergence by up to <strong style="color: var(--green);">4.64×</strong>, unlocking the power of massive rollout scaling at a fraction of the cost.
         </p>
       </div>
       <img src="static/images/head_figure.png" alt="Sol-RL head figure" class="section-img">
@@ -581,7 +581,7 @@ footer a { color: var(--green-dim); text-decoration: none; }
       <h2 class="section-title">Core Design: Decoupled Two-Stage Pipeline</h2>
       <div class="card">
         <p style="color: var(--text-secondary); font-size: 0.95rem;">
-          We separate the high-throughput FP4 exploration from the selective BF16 high-contrastive rollout. This framework achieves up to 4× acceleration compared to naive scaling while avoiding quantization-induced corruption, introducing merely a 2% computational overhead.
+          We separate the high-throughput FP4 exploration from the selective BF16 high-contrastive rollout. This framework achieves up to 2.4× acceleration compared to naive scaling while avoiding quantization-induced corruption, introducing merely a 2% computational overhead.
         </p>
       </div>
       <img src="static/images/teaser.png" alt="Pipeline overview" class="section-img">
@@ -698,6 +698,43 @@ footer a { color: var(--green-dim); text-decoration: none; }
       <img src="static/images/grid_3x3.png" alt="Learning curves" class="section-img">
       <p class="caption">Learning curves across metrics and models.</p>
 
+      <h3 style="color: var(--text-primary); font-size: 1.1rem; margin: 32px 0 12px; font-weight: 600;">Alignment Performance Preservation</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px;">
+        Post-RL performance compared to the BF16 naive scaling rollout on HPSv2. Under identical training steps, our method maintains on-par results with a marginal gap (Δ) of at most ~1% while achieving higher efficiency.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Base Model</th>
+              <th>Naive (HPSv2)</th>
+              <th>Sol-RL (HPSv2)</th>
+              <th>Δ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>FLUX.1</td>
+              <td>0.3699</td>
+              <td>0.3688</td>
+              <td class="best">−0.29%</td>
+            </tr>
+            <tr>
+              <td>SD3.5-Large</td>
+              <td>0.3803</td>
+              <td>0.3762</td>
+              <td>−1.08%</td>
+            </tr>
+            <tr>
+              <td>SANA</td>
+              <td>0.3682</td>
+              <td>0.3686</td>
+              <td class="best">+0.11%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <h3 style="color: var(--text-primary); font-size: 1.1rem; margin: 32px 0 12px; font-weight: 600;">Efficiency Comparison (seconds/iteration)</h3>
       <div class="table-wrap">
         <table>
@@ -750,11 +787,10 @@ footer a { color: var(--green-dim); text-decoration: none; }
       <h2 class="section-title">BibTeX</h2>
       <div class="bibtex-block">
         <button class="copy-btn" onclick="copyBibtex()">Copy</button>
-@inproceedings{solrl2025,
+@article{solrl2026,
   title={FP4 Explore, BF16 Train: Diffusion Reinforcement Learning via Efficient Rollout Scaling},
-  author={Anonymous},
-  booktitle={NeurIPS},
-  year={2025},
+  author={Li, Yitong and Chen, Junsong and Xue, Shuchen and Zeren, Pengcuo and Fu, Siyuan and Yang, Dinghao and Tang, Yangyang and Bai, Junjie and Luo, Ping and Han, Song and Xie, Enze},
+  year={2026},
 }</div>
     </section>
 
