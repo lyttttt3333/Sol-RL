@@ -545,7 +545,7 @@ footer a { color: var(--green-dim); text-decoration: none; }
       <h2 class="section-title">About</h2>
       <div class="card">
         <p style="color: var(--text-secondary); font-size: 0.95rem;">
-          Reinforcement-Learning-based post-training has recently emerged as a promising paradigm for aligning text-to-image diffusion models with human preferences. In recent studies, increasing the rollout group size yields pronounced performance improvements, indicating substantial room for further alignment gains. However, scaling rollouts on large-scale foundational diffusion models (e.g., FLUX.1-12B) imposes a heavy computational burden. To alleviate this bottleneck, we explore the integration of FP4 quantization into Diffusion RL rollouts. Yet, we identify that naive quantized pipelines inherently introduce risks of performance degradation. To overcome this dilemma between efficiency and training integrity, we propose <strong style="color: var(--green);">Sol-RL</strong> (Speed-of-light RL), a novel FP4-empowered Two-Stage Reinforcement Learning framework. First, we utilize high-throughput NVFP4 rollouts to generate a massive candidate pool and extract a highly contrastive subset. Second, we regenerate these selected samples in BF16 precision and optimize the policy exclusively on them. By decoupling candidate exploration from policy optimization, Sol-RL integrates the algorithmic mechanisms of rollout scaling with the system-level throughput gains of NVFP4. This synergistic algorithm-hardware design effectively accelerates the rollout phase while reserving high-fidelity samples for optimization. We empirically demonstrate that our framework maintains the training integrity of the BF16 precision pipeline while fully exploiting the throughput gains enabled by FP4 arithmetic. Extensive experiments across SANA, FLUX.1, and SD3.5-L substantiate that our approach delivers superior alignment performance across multiple metrics while accelerating training convergence by up to <strong style="color: var(--green);">4.64×</strong>, unlocking the power of massive rollout scaling at a fraction of the cost.
+          RL-based post-training is a promising paradigm for aligning diffusion models with human preferences, and scaling rollout group size yields clear gains — but at prohibitive cost on large models like FLUX.1-12B. We propose <strong style="color: var(--green);">Sol-RL</strong> (Speed-of-light RL), an FP4-empowered two-stage RL framework that decouples exploration from optimization: high-throughput NVFP4 rollouts generate a massive candidate pool, from which only the most contrastive subset is regenerated in BF16 for policy updates. This algorithm-hardware co-design accelerates rollouts while preserving training integrity. Experiments across SANA, FLUX.1, and SD3.5-L show superior alignment with up to <strong style="color: var(--green);">4.64×</strong> faster convergence.
         </p>
       </div>
       <img src="static/images/head_figure.png" alt="Sol-RL head figure" class="section-img">
@@ -581,7 +581,7 @@ footer a { color: var(--green-dim); text-decoration: none; }
       <h2 class="section-title">Core Design: Decoupled Two-Stage Pipeline</h2>
       <div class="card">
         <p style="color: var(--text-secondary); font-size: 0.95rem;">
-          We separate the high-throughput FP4 exploration from the selective BF16 high-contrastive rollout. This framework achieves up to 2.4× acceleration compared to naive scaling while avoiding quantization-induced corruption, introducing merely a 2% computational overhead.
+          We decouple high-throughput FP4 exploration from selective BF16 training, achieving up to 2.4× rollout acceleration with merely 2% computational overhead while avoiding quantization-induced corruption.
         </p>
       </div>
       <img src="static/images/teaser.png" alt="Pipeline overview" class="section-img">
@@ -592,43 +592,37 @@ footer a { color: var(--green-dim); text-decoration: none; }
       <h2 class="section-title">Methodology</h2>
       <div class="card">
         <p style="color: var(--text-secondary); font-size: 0.95rem;">
-          Although expanding the pool of exploratory rollouts yields substantial performance gains, it creates a bottleneck in the RL pipeline with heavy inference costs. Naive application of acceleration techniques such as low-bit quantization often compromises visual integrity and destabilizes optimization. Sol-RL introduces a <strong style="color: var(--green);">decoupled two-stage architecture</strong> that leverages FP4 quantization exclusively for high-throughput exploration while preserving high-fidelity rollout for policy optimization.
+          Scaling rollouts improves alignment but creates an inference bottleneck, and naive FP4 quantization compromises visual fidelity. Sol-RL introduces a <strong style="color: var(--green);">decoupled two-stage architecture</strong> that uses FP4 exclusively for exploration while preserving BF16 for optimization.
         </p>
       </div>
 
       <h3 style="color: var(--text-primary); font-size: 1.1rem; margin: 32px 0 16px; font-weight: 600;">Rollout Scaling: Promise and Bottleneck</h3>
       <div class="card">
-        <p style="color: var(--text-secondary); font-size: 0.93rem; margin-bottom: 12px;">
-          Larger rollout groups broaden exploration and yield better candidate samples. Under a <em>selective training</em> paradigm, only the most contrastive samples (best-K and worst-K) are used for gradient updates, providing more reliable and informative learning signals while keeping training overhead unchanged. This enables faster convergence and superior alignment performance.
-        </p>
         <p style="color: var(--text-secondary); font-size: 0.93rem;">
-          However, aggressive rollout scaling shifts the computational bottleneck from policy optimization to candidate generation. Under selective training, only a small contrastive fraction is retained while the vast majority of generated trajectories are discarded — revealing massive algorithmic redundancy in computing the full pool at high precision.
+          Under <em>selective training</em>, only the best-K and worst-K samples drive gradient updates, so larger rollout groups yield better learning signals at fixed training cost. However, the vast majority of generated candidates are discarded — revealing massive redundancy in computing the full pool at high precision.
         </p>
       </div>
 
       <h3 style="color: var(--text-primary); font-size: 1.1rem; margin: 32px 0 16px; font-weight: 600;">Key Insight: Proxy Reward Ranking via FP4</h3>
       <div class="card">
-        <p style="color: var(--text-secondary); font-size: 0.93rem; margin-bottom: 12px;">
-          Under the deterministic nature of ODE-style diffusion sampling, the coarse semantic layout and structural outcome of a generated rollout are fundamentally dictated by its initial noise seed. NVFP4 inference naturally preserves this semantic structure despite localized pixel-level deviations, enabling high-throughput rollouts to rapidly estimate approximate reward magnitudes.
-        </p>
         <p style="color: var(--text-secondary); font-size: 0.93rem;">
-          This means <strong style="color: var(--green);">FP4 rollouts serve as reliable proxies for intra-group reward ranking</strong> — we can use low-precision forward passes solely to evaluate and rank candidates, then regenerate only the most informative seeds in full BF16 precision. Empirical analysis confirms heavy concentration of probability density along the rank diagonal, particularly within the Top-K and Bottom-K quadrants essential for policy optimization.
+          In ODE-style diffusion sampling, the semantic outcome is dictated by the initial noise seed. NVFP4 preserves this structure despite pixel-level deviations, so <strong style="color: var(--green);">FP4 rollouts serve as reliable proxies for reward ranking</strong> — enabling us to identify the most informative seeds cheaply, then regenerate only those in BF16.
         </p>
       </div>
 
       <h3 style="color: var(--text-primary); font-size: 1.1rem; margin: 32px 0 16px; font-weight: 600;">Two-Stage Pipeline</h3>
       <ul class="method-list">
         <li>
-          <strong>Stage 1: Accelerated Exploration at Scale via FP4</strong> — Sample N=96 independent initial noises and generate candidates through the NVFP4-quantized ODE solver with reduced inference steps (6 steps) to rapidly compute proxy rewards. NVFP4 dense operations deliver up to 4× the TFLOPs of standard BF16 arithmetic, unlocking extreme throughput. The proxy rankings are used to filter the massive pool and isolate a minimal subset of K high-contrastive seeds (top and bottom candidates).
+          <strong>Stage 1: FP4 Explore</strong> — Sample N=96 noises and generate candidates via the NVFP4-quantized solver (up to 4× TFLOPs vs. BF16) to compute proxy rewards. Filter to isolate the top/bottom-K most contrastive seeds.
         </li>
         <li>
-          <strong>Stage 2: High-Fidelity Regeneration and Policy Update</strong> — The selected K=24 seeds are regenerated in the original BF16 diffusion loop with the full step budget (10 steps). By completely shielding the vector field from low-precision quantization, the ODE solver reliably reconstructs high-fidelity samples. The policy then performs standard gradient-based optimization exclusively on these high-fidelity contrastive samples. After the update, weights are re-quantized into NVFP4 with negligible overhead and synchronized to the inference model for the next iteration.
+          <strong>Stage 2: BF16 Train</strong> — Regenerate the selected K=24 seeds in BF16 with the full step budget. Optimize the policy on these high-fidelity samples, then re-quantize weights to NVFP4 for the next iteration.
         </li>
       </ul>
 
       <div class="card" style="background: linear-gradient(135deg, #f9fff0, #eef7e0); border-color: rgba(118,185,0,0.2);">
         <p style="color: var(--text-secondary); font-size: 0.93rem;">
-          <strong style="color: var(--green);">In summary</strong>, Sol-RL elegantly resolves the dilemma between training integrity and efficiency. It harnesses the extreme TFLOPs of FP4 to efficiently explore a massive candidate pool and identify its most contrastive samples, while reserving expensive high-precision compute strictly for the K samples that actually dictate the policy update — introducing merely ~2% computational overhead relative to the accelerated exploration phase.
+          <strong style="color: var(--green);">In summary</strong>, Sol-RL harnesses FP4 throughput for massive-scale exploration and reserves BF16 compute strictly for the K samples that dictate the policy update — introducing merely ~2% overhead.
         </p>
       </div>
     </section>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sol-RL: FP4 Explore, BF16 Train</title>
+<link rel="shortcut icon" type="image/png" href="https://www.nvidia.com/favicon.ico">
+
+<!-- ============================================================
+     REDIRECT CONFIG — Change this ONE line to redirect visitors
+     ============================================================
+     Set to the final project page URL when ready, e.g.:
+       const REDIRECT_TARGET = "https://your-final-project-page.com";
+     Leave as "" to show the "Coming Soon" landing page.
+     ============================================================ -->
+<script>
+  const REDIRECT_TARGET = "";
+  const REDIRECT_DELAY_SECONDS = 3;
+
+  if (REDIRECT_TARGET) {
+    document.title = "Redirecting… | Sol-RL";
+    setTimeout(() => { window.location.replace(REDIRECT_TARGET); }, REDIRECT_DELAY_SECONDS * 1000);
+  }
+</script>
+<meta property="og:title" content="Sol-RL: FP4 Explore, BF16 Train">
+<meta property="og:description" content="Diffusion Reinforcement Learning via Efficient Rollout Scaling. NVIDIA · HKU · MIT.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --green: #76b900;
+  --green-dim: #5a8f00;
+  --bg: #0d0d0d;
+  --card: #18181b;
+  --card-border: rgba(118, 185, 0, 0.12);
+  --text: #e4e4e7;
+  --text-muted: #a1a1aa;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+}
+
+/* ── Hero ── */
+header {
+  padding: 80px 0 40px;
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin-bottom: 28px;
+}
+
+h1 {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+h1 .accent { color: var(--green); }
+
+.subtitle {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  max-width: 540px;
+  margin: 0 auto 20px;
+}
+
+.authors {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.affiliations {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin-bottom: 32px;
+}
+
+/* ── Buttons ── */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--green);
+  color: #000;
+}
+.btn-primary:hover { background: var(--green-dim); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.btn-outline:hover { border-color: var(--green); color: var(--green); }
+
+/* ── Redirect banner ── */
+.redirect-banner {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 28px 32px;
+  margin: 32px auto;
+  max-width: 520px;
+  text-align: center;
+}
+
+.redirect-banner.active { display: block; }
+
+.redirect-banner p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.redirect-banner a {
+  color: var(--green);
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.spinner {
+  width: 28px; height: 28px;
+  border: 3px solid rgba(118, 185, 0, 0.2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 14px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.countdown {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* ── Coming Soon card ── */
+.coming-soon {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 48px 32px;
+  margin: 24px auto;
+  max-width: 520px;
+  text-align: center;
+}
+
+.coming-soon.active { display: block; }
+
+.coming-soon h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.coming-soon p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.pulse-dot {
+  width: 10px; height: 10px;
+  background: var(--green);
+  border-radius: 50%;
+  margin: 0 auto 18px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.6); }
+}
+
+/* ── Footer ── */
+footer {
+  margin-top: auto;
+  padding: 40px 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  header { padding: 48px 0 24px; }
+  .btn-row { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="badge">NVIDIA &middot; HKU &middot; MIT</div>
+    <h1><span class="accent">Sol-RL</span></h1>
+    <h1 style="font-size: clamp(1.1rem, 2.5vw, 1.5rem); font-weight: 500; opacity: 0.8; margin-bottom: 16px;">
+      FP4 Explore, BF16 Train
+    </h1>
+    <p class="subtitle">Diffusion Reinforcement Learning via Efficient Rollout Scaling</p>
+    <p class="authors">
+      Yitong Li*, Junsong Chen*, Shuchen Xue*, Pengcuo Zeren, Siyuan Fu,<br>
+      Dinghao Yang, Yangyang Tang, Junjie Bai, Ping Luo, Song Han, Enze Xie
+    </p>
+    <p class="affiliations">* Equal contribution</p>
+
+    <div class="btn-row">
+      <a class="btn btn-primary" href="https://arxiv.org/abs/XXXX.XXXXX" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Paper
+      </a>
+      <a class="btn btn-outline" href="https://github.com/lyttttt3333/Sol-RL" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+        Code
+      </a>
+      <a class="btn btn-outline" href="#" target="_blank">
+        🤗 Models
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Shown when REDIRECT_TARGET is set -->
+<div class="container">
+  <div class="redirect-banner" id="redirectBanner">
+    <div class="spinner"></div>
+    <p>Redirecting you to the project page&hellip;</p>
+    <p class="countdown" id="countdown"></p>
+    <p style="margin-top: 8px; font-size: 0.8rem;">
+      If not redirected automatically, <a id="manualLink" href="#">click here</a>.
+    </p>
+  </div>
+</div>
+
+<!-- Shown when REDIRECT_TARGET is empty -->
+<div class="container">
+  <div class="coming-soon" id="comingSoon">
+    <div class="pulse-dot"></div>
+    <h2>Project Page Coming Soon</h2>
+    <p>The full project page with interactive demos, qualitative results, and code is under construction. Stay tuned!</p>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    &copy; 2026 Sol-RL. This website is licensed under CC BY-SA 4.0.
+  </div>
+</footer>
+
+<script>
+(function() {
+  const banner = document.getElementById('redirectBanner');
+  const comingSoon = document.getElementById('comingSoon');
+  const countdownEl = document.getElementById('countdown');
+  const manualLink = document.getElementById('manualLink');
+
+  if (REDIRECT_TARGET) {
+    banner.classList.add('active');
+    manualLink.href = REDIRECT_TARGET;
+    let remaining = REDIRECT_DELAY_SECONDS;
+    countdownEl.textContent = `Redirecting in ${remaining}s…`;
+    const timer = setInterval(() => {
+      remaining--;
+      if (remaining > 0) {
+        countdownEl.textContent = `Redirecting in ${remaining}s…`;
+      } else {
+        countdownEl.textContent = 'Redirecting now…';
+        clearInterval(timer);
+      }
+    }, 1000);
+  } else {
+    comingSoon.classList.add('active');
+  }
+})();
+</script>
+</body>
+</html>
